@@ -34,7 +34,7 @@ Contributing to car-learners-backend is straightforward. Here's how you can get 
 6. **Push Changes**: Push your changes to your forked repository.
 
    ```bash
-   git push origin feature/new-feature
+   git push origin main
    ```
 
 7. **Create a Pull Request**: Go to the GitHub page of your forked repository. You'll see an option to create a pull request. Click on it, fill out the necessary details, and submit the pull request.
