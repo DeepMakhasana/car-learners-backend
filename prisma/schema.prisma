@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// general tables
+model CarBrand {
+  id       Int        @id @default(autoincrement())
+  brand    String     @unique
+  carModel CarModel[]
+}
+
+model CarModel {
+  id       Int       @id @default(autoincrement())
+  carBrand CarBrand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId  Int
+  model    String    @unique
+  vehicle  Vehicle[]
+}
+
+model State {
+  id     Int      @id @default(autoincrement())
+  state  String   @unique
+  city   City[]
+  school School[]
+}
+
+model City {
+  id      Int      @id @default(autoincrement())
+  city    String
+  state   State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  stateId Int
+  school  School[]
+}
+
+// Authentication (users) table
+model Owner {
+  id         Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique
+  password   String
+  number     String    @unique
+  otp        Int
+  isVerifyed Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatesAt  DateTime  @updatedAt
+  school     School[]
+  expense    Expense[]
+}
+
+model Trainer {
+  id              Int               @id @default(autoincrement())
+  name            String
+  email           String            @unique
+  number          String            @unique
+  expiration      Float
+  profileImg      String
+  salary          Int
+  password        String
+  school          School            @relation(fields: [schoolId], references: [id])
+  schoolId        Int
+  vechical        Vehicle[]
+  purchasedCourse PurchasedCourse[]
+  expense         Expense[]
+}
+
+model Learner {
+  id              Int               @id @default(autoincrement())
+  name            String
+  email           String            @unique
+  number          String            @unique
+  password        String
+  otp             Int
+  isVerifyed      Boolean           @default(false)
+  location        String            @default("india")
+  purchasedCourse PurchasedCourse[]
+  courseReview    CourseReview[]
+}
+
+// main feature table
+model School {
+  id          Int           @id @default(autoincrement())
+  name        String
+  conNumber   String        @unique
+  address     String
+  state       State         @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  stateId     Int
+  city        City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  cityId      Int
+  pincode     Int
+  frontImage  String
+  owner       Owner         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     Int
+  isOpen      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  schoolImage SchoolImage[]
+  course      Course[]
+  trainer     Trainer[]
+  timeSlot    TimeSlot[]
+  vehicle     Vehicle[]
+  expense     Expense[]
+}
+
+model SchoolImage {
+  id       Int    @id @default(autoincrement())
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId Int
+  filename String
+}
+
+model Course {
+  id              Int               @id @default(autoincrement())
+  day             Int
+  price           Int
+  school          School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId        Int
+  isAvailable     Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  curriculum      Curriculum[]
+  CourseVehicle   CourseVehicle[]
+  purchasedCourse PurchasedCourse[]
+  courseReview    CourseReview[]
+}
+
+model Curriculum {
+  id       Int    @id @default(autoincrement())
+  title    String
+  days     Int
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId Int
+}
+
+model Vehicle {
+  id               Int             @id @default(autoincrement())
+  model            CarModel        @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  modelId          Int
+  trainer          Trainer         @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId        Int
+  school           School          @relation(fields: [schooleId], references: [id], onDelete: Cascade)
+  schooleId        Int
+  selected_vehicle CourseVehicle[]
+}
+
+model CourseVehicle {
+  id              Int               @id @default(autoincrement())
+  vehicle         Vehicle           @relation(fields: [vehicleID], references: [id], onDelete: Cascade)
+  vehicleID       Int
+  price           Int
+  course          Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId        Int
+  purchasedCourse PurchasedCourse[]
+}
+
+model TimeSlot {
+  id              Int               @id @default(autoincrement())
+  start_time      String
+  end_time        String
+  school          School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId        Int
+  purchasedCourse PurchasedCourse[]
+}
+
+model PurchasedCourse {
+  id            Int           @id @default(autoincrement())
+  learner       Learner       @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  learnerId     Int
+  trainer       Trainer       @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId     Int
+  course        Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId      Int
+  createdAt     DateTime      @default(now())
+  totalPrice    Int
+  TimeSlot      TimeSlot      @relation(fields: [timeSlot], references: [id], onDelete: Cascade)
+  timeSlot      Int
+  courseVehicle CourseVehicle @relation(fields: [vechical], references: [id], onDelete: Cascade)
+  vechical      Int
+  paymentId     String
+  updateAt      DateTime      @updatedAt
+}
+
+model CourseReview {
+  id        Int      @id @default(autoincrement())
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+  learner   Learner  @relation(fields: [learnerId], references: [id])
+  learnerId Int
+  createdAt DateTime @default(now())
+  rating    Float
+  review    String
+}
+
+model Expense {
+  id        Int      @id @default(autoincrement())
+  reason    String
+  amount    Int
+  trainer   Trainer? @relation(fields: [trainerID], references: [id], onDelete: Cascade)
+  trainerID Int?
+  owner     Owner?   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   Int?
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId  Int
+  status    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
